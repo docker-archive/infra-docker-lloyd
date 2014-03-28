@@ -1,0 +1,46 @@
+#!/bin/sh -e
+
+TIMEOUT=86400 # 24 hours
+BACKUPS=/backups
+
+BUCKET=$1
+if [ -z "$BUCKET" ]
+then
+  echo "$0 bucket container [container...]"
+  exit 1
+fi
+shift
+
+if [ -z "$ACCESS_KEY" -o -z "$SECRET_KEY" ]
+then
+  echo "Please set ACCESS_KEY and SECRET_KEY environment variables"
+  exit 1
+fi
+
+
+[ -d "$BACKUPS" ] || mkdir "$BACKUPS"
+
+backup() {
+  echo "[=] $1"
+  while true
+  do
+    echo "$1: Backup"
+    /docker-backup/docker-backup store "$BACKUPS/$1.tar" "$1"
+    gzip "$BACKUPS/$1.tar"
+
+    echo "$1: Upload"
+    s3cmd --access_key="$ACCESS_KEY" --secret_key="$SECRET_KEY" \
+          -c /dev/null $S3CMD_OPTS put "$BACKUPS/$1.tar.gz" $BUCKET
+    rm "$BACKUPS/$1.tar.gz"
+
+    echo "$1: Sleep"
+    sleep $TIMEOUT
+  done
+}
+
+for c in $@
+do
+  backup $c &
+done
+
+wait
