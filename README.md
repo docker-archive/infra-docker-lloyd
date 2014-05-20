@@ -7,7 +7,7 @@ and stores them on s3.
 
 To use it, run:
 
-    $ docker run -v /var/run/docker.sock:/var/run/docker.sock \
+    $ docker run -v /var/run/docker.sock:/docker.sock \
              -v /var/lib/docker/vfs/dir:/var/lib/docker/vfs/dir \
              -e ACCESS_KEY=... -e SECRET_KEY=... docker-backup-daemon \
               s3://<BUCKET> container-a container-b container-c...
@@ -18,3 +18,9 @@ gzip and upload a tarball named after the container to S3.
 
 See [docker-backup](https://github.com/discordianfish/docker-backup) on
 how to restore a backup.
+
+The Dockerfile passes command line options to docker-backup by setting the OPTS
+environment variable. If you need to override/change those, you can set it on
+the command line:
+
+    $ docker run -e OPTS="-addr=/foo/docker.sock" ...

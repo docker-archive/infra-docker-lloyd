@@ -25,7 +25,7 @@ backup() {
   while true
   do
     echo "$1: Backup"
-    /docker-backup/docker-backup store "$BACKUPS/$1.tar" "$1"
+    /docker-backup/docker-backup $OPTS store "$BACKUPS/$1.tar" "$1"
     gzip "$BACKUPS/$1.tar"
 
     echo "$1: Upload"
