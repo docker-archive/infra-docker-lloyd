@@ -8,4 +8,3 @@ RUN cd /s3cmd && python setup.py install
 ADD run   /docker-backup/
 ADD s3cfg /.s3cfg
 ENTRYPOINT [ "./run" ]
-ENV OPTS -addr=/docker.sock

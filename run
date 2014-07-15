@@ -31,7 +31,7 @@ backup() {
   while true
   do
     echo "$1: Backup"
-    /docker-backup/docker-backup $OPTS store "$BACKUPS/$1.tar" "$1" | push_metrics
+    /docker-backup/docker-backup $OPTS -addr /docker.sock store "$BACKUPS/$1.tar" "$1" | push_metrics
     gzip "$BACKUPS/$1.tar"
 
     echo "$1: Upload"
