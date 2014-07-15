@@ -7,6 +7,7 @@ BUCKET=$1
 if [ -z "$BUCKET" ]
 then
   echo "$0 bucket container [container...]"
+  echo "(If set, docker-backup output will be POSTed to \$PUSHGATEWAY)"
   exit 1
 fi
 shift
@@ -20,12 +21,17 @@ fi
 
 [ -d "$BACKUPS" ] || mkdir "$BACKUPS"
 
+push_metrics() {
+  [ -z "$PUSHGATEWAY" ] && return
+  curl --data-binary @- "$PUSHGATEWAY"
+}
+
 backup() {
   echo "[=] $1"
   while true
   do
     echo "$1: Backup"
-    /docker-backup/docker-backup $OPTS store "$BACKUPS/$1.tar" "$1"
+    /docker-backup/docker-backup $OPTS store "$BACKUPS/$1.tar" "$1" | push_metrics
     gzip "$BACKUPS/$1.tar"
 
     echo "$1: Upload"
@@ -33,6 +39,7 @@ backup() {
           -c /dev/null $S3CMD_OPTS put "$BACKUPS/$1.tar.gz" $BUCKET
     rm "$BACKUPS/$1.tar.gz"
 
+    date +"last_run{container=\"$1\"} %s" | push_metrics
     echo "$1: Sleep"
     sleep $TIMEOUT
   done
