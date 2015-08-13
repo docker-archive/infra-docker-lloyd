@@ -19,7 +19,7 @@ Container uses environment variable, which can be overwritten:
 
 | Variable | Default value | Description |
 | -------- | ------------- | ----------- |
-| PREFIX | "%Y-%m-%d_%H-%m-%S_" | Tarball prefix |
+| PREFIX | "%Y-%m-%d_%H-%M-%S_" | Tarball prefix |
 | SUFFIX | | Tarball suffix |
 | TIMEOUT | 86400 | Backup period - 86400 = 24hours, 0 - one time backup only |
 

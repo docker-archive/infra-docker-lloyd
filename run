@@ -5,7 +5,7 @@ if [ "$TIMEOUT" = "" ]; then
 fi
 BACKUPS=/backups
 if [ "$PREFIX" = "" ]; then
-  PREFIX="%Y-%m-%d_%H-%m-%S_"
+  PREFIX="%Y-%m-%d_%H-%M-%S_"
 fi
 if [ "$SUFFIX" = "" ]; then
   SUFFIX=""
