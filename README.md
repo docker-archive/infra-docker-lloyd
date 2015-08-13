@@ -9,12 +9,19 @@ To use it, run:
 
     $ docker run -v /var/run/docker.sock:/docker.sock \
              -v /var/lib/docker/vfs/dir:/var/lib/docker/vfs/dir \
-             -e ACCESS_KEY=... -e SECRET_KEY=... docker-backup-daemon \
+             -e ACCESS_KEY=... -e SECRET_KEY=... dckr/docker-lloyd \
               s3://<BUCKET> container-a container-b container-c...
 
-This will run [docker-backup](https://github.com/discordianfish/docker-backup),
+This will run [docker-backup](https://github.com/docker-infra/docker-backup),
 gzip and upload a tarball named after the container to S3.
 
+Container uses environment variable, which can be overwritten:
+
+| Variable | Default value | Description |
+| -------- | ------------- |
+| PREFIX | "%Y-%m-%d_%H-%m-%S_" | Tarball prefix |
+| SUFFIX | | Tarball suffix |
+| TIMEOUT | 86400 | Backup period - 86400 = 24hours |
 
 See [docker-backup](https://github.com/discordianfish/docker-backup) on
 how to restore a backup.

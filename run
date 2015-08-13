@@ -1,7 +1,15 @@
 #!/bin/sh -e
 
-TIMEOUT=86400 # 24 hours
+if [ "$TIMEOUT" = "" ]; then
+  TIMEOUT=86400
+fi
 BACKUPS=/backups
+if [ "$PREFIX" = "" ]; then
+  PREFIX="%Y-%m-%d_%H-%m-%S_"
+fi
+if [ "$SUFFIX" = "" ]; then
+  SUFFIX=""
+fi
 
 BUCKET=$1
 if [ -z "$BUCKET" ]
@@ -30,17 +38,20 @@ backup() {
   echo "[=] $1"
   while true
   do
-    echo "$1: Backup"
-    /docker-backup/docker-backup $OPTS -addr /docker.sock store "$BACKUPS/$1.tar" "$1" | push_metrics
-    gzip "$BACKUPS/$1.tar"
+    sprefix=$(date +${PREFIX})
+    ssuffix=$(date +${SUFFIX})
+    tar=${sprefix}$1${ssuffix}.tar
+    echo "BACKUP: $1 - file $tar"
+    /docker-backup/docker-backup $OPTS -addr /docker.sock store "$BACKUPS/$tar" "$1" | push_metrics
+    gzip "$BACKUPS/$tar"
 
-    echo "$1: Upload"
+    echo "UPLOAD: $1"
     s3cmd --access_key="$ACCESS_KEY" --secret_key="$SECRET_KEY" \
-          -c /dev/null $S3CMD_OPTS put "$BACKUPS/$1.tar.gz" $BUCKET
-    rm "$BACKUPS/$1.tar.gz"
+          -c /dev/null $S3CMD_OPTS put "$BACKUPS/$tar.gz" $BUCKET
+    rm "$BACKUPS/$tar.gz"
 
     date +"last_run{container=\"$1\"} %s" | push_metrics
-    echo "$1: Sleep"
+    echo "SLEEP: $1 for $TIMEOUT seconds"
     sleep $TIMEOUT
   done
 }
