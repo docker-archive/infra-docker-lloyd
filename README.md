@@ -18,7 +18,7 @@ gzip and upload a tarball named after the container to S3.
 Container uses environment variable, which can be overwritten:
 
 | Variable | Default value | Description |
-| -------- | ------------- |
+| -------- | ------------- | ----------- |
 | PREFIX | "%Y-%m-%d_%H-%m-%S_" | Tarball prefix |
 | SUFFIX | | Tarball suffix |
 | TIMEOUT | 86400 | Backup period - 86400 = 24hours |
