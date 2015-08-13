@@ -35,7 +35,7 @@ push_metrics() {
 }
 
 backup() {
-  echo "[=] $1"
+  echo "START: $1"
   while true
   do
     sprefix=$(date +${PREFIX})
@@ -51,7 +51,12 @@ backup() {
     rm "$BACKUPS/$tar.gz"
 
     date +"last_run{container=\"$1\"} %s" | push_metrics
-    echo "SLEEP: $1 for $TIMEOUT seconds"
+    echo "SLEEP: $1 - for $TIMEOUT seconds"
+    # TIMEOUT = 0 -> execute just once and exit
+    if [ "$TIMEOUT" = 0 ]; then
+       echo "END: $1 - one time backup only"
+       break
+    fi
     sleep $TIMEOUT
   done
 }

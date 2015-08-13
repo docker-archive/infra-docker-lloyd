@@ -21,7 +21,7 @@ Container uses environment variable, which can be overwritten:
 | -------- | ------------- | ----------- |
 | PREFIX | "%Y-%m-%d_%H-%m-%S_" | Tarball prefix |
 | SUFFIX | | Tarball suffix |
-| TIMEOUT | 86400 | Backup period - 86400 = 24hours |
+| TIMEOUT | 86400 | Backup period - 86400 = 24hours, 0 - one time backup only |
 
 See [docker-backup](https://github.com/discordianfish/docker-backup) on
 how to restore a backup.
