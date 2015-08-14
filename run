@@ -1,23 +1,52 @@
-#!/bin/sh -e
+#!/bin/sh
 
-TIMEOUT=86400 # 24 hours
+if [ "$DEBUG" = "" ]; then
+  DEBUG=1
+fi
+if [ "$DEBUG" == 0 ]; then
+  exec 1>/dev/null
+  #exec 2>/dev/null
+fi
+if [ "$TIMEOUT" = "" ]; then
+  export TIMEOUT=86400
+fi
 BACKUPS=/backups
+if [ "$PREFIX" = "" ]; then
+  export PREFIX="%Y-%m-%d_%H-%M-%S_"
+fi
+if [ "$SUFFIX" = "" ]; then
+  export SUFFIX=""
+fi
+if [ "$OPTS" = "" ]; then
+  export OPTS=""
+fi
+if [ "$S3CMD_OPTS" = "" ]; then
+  export S3CMD_OPTS=""
+fi
+if [ "$BACKUPS" = "" ]; then
+  export BACKUPS="/backups"
+else
+  export BACKUPS=$BACKUPS
+fi
+if [ "$EMAIL_FROM" = "" ]; then
+  export EMAIL_FROM=""
+fi
+if [ "$EMAIL_TO" = "" ]; then
+  export EMAIL_TO=""
+fi
 
-BUCKET=$1
-if [ -z "$BUCKET" ]
-then
+export BUCKET=$1
+if [ -z "$BUCKET" ]; then
   echo "$0 bucket container [container...]"
   echo "(If set, docker-backup output will be POSTed to \$PUSHGATEWAY)"
   exit 1
 fi
 shift
 
-if [ -z "$ACCESS_KEY" -o -z "$SECRET_KEY" ]
-then
+if [ -z "$ACCESS_KEY" -o -z "$SECRET_KEY" ]; then
   echo "Please set ACCESS_KEY and SECRET_KEY environment variables"
   exit 1
 fi
-
 
 [ -d "$BACKUPS" ] || mkdir "$BACKUPS"
 
@@ -27,20 +56,20 @@ push_metrics() {
 }
 
 backup() {
-  echo "[=] $1"
+  echo "START: $1"
   while true
   do
-    echo "$1: Backup"
-    /docker-backup/docker-backup $OPTS -addr /docker.sock store "$BACKUPS/$1.tar" "$1" | push_metrics
-    gzip "$BACKUPS/$1.tar"
-
-    echo "$1: Upload"
-    s3cmd --access_key="$ACCESS_KEY" --secret_key="$SECRET_KEY" \
-          -c /dev/null $S3CMD_OPTS put "$BACKUPS/$1.tar.gz" $BUCKET
-    rm "$BACKUPS/$1.tar.gz"
-
+    # python script with error handling
+    /docker-backup/docker_backup.py $1
+    
     date +"last_run{container=\"$1\"} %s" | push_metrics
-    echo "$1: Sleep"
+    # TIMEOUT = 0 -> execute just once and exit
+    if [ "$TIMEOUT" = 0 ]; then
+      echo "END: $1 - one time backup only"
+      break
+    else
+      echo "SLEEP: $1 - for $TIMEOUT seconds"
+    fi
     sleep $TIMEOUT
   done
 }
