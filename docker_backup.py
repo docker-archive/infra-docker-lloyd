@@ -3,7 +3,7 @@
 import sys, os, commands
 
 def system_command(clicommand, type):
-     try:           
+     try:
          status, output = commands.getstatusoutput(clicommand)
      except TypeError:
          error_message = "Problem with command: %s" % (clicommand) 
@@ -38,19 +38,18 @@ def send_email(to, efrom, subject, message):
     msg['Subject'] = subject
     msg['From'] = efrom
     msg['To'] = to
-    s = smtplib.SMTP('localhost')
     try:
+        s = smtplib.SMTP('localhost')
         s.sendmail(efrom, [efrom], msg.as_string())
-    except:
         s.quit()
+    except:
         print >>sys.stderr, 'ERROR: Problem with sending of email'
-    s.quit()
 
 sprefix = system_command('date +"' + os.environ['PREFIX'] + '"', 'output')
 ssuffix = system_command('date +"' + os.environ['SUFFIX'] + '"', 'output')
 tar = sprefix + sys.argv[1] + ssuffix + ".tar"
 
-print "BACKUP: %s - %s" % (sys.argv[1], tar)
+print "BACKUP: %s - %s/%s" % (sys.argv[1], os.environ['BACKUPS'], tar)
 if system_command('/docker-backup/docker-backup ' + os.environ['OPTS'] + ' \
       -addr /docker.sock store "' + os.environ['BACKUPS'] + '/' + tar + '" "' \
        + sys.argv[1] + '"', 'status') != 0:
@@ -58,8 +57,9 @@ if system_command('/docker-backup/docker-backup ' + os.environ['OPTS'] + ' \
 
 system_command('gzip "' + os.environ['BACKUPS'] + '/' + tar + '"', 'status')
 
-print "UPLOAD: %s - %s" % (sys.argv[1], tar)
-system_command('s3cmd --access_key="' + os.environ['ACCESS_KEY'] + '" --secret_key="' + os.environ['SECRET_KEY'] + '" \
-          -c /dev/null ' + os.environ['S3CMD_OPTS'] + ' put "' + os.environ['BACKUPS'] + '/' + tar + '.gz" ' + \
+print "UPLOAD: %s - %s/%s" % (sys.argv[1], os.environ['BACKUPS'], tar)
+
+system_command('s3cmd --access_key="' + os.environ['ACCESS_KEY'] + '" --secret_key="' + os.environ['SECRET_KEY'] + \
+          '" -c /dev/null ' + os.environ['S3CMD_OPTS'] + ' put "' + os.environ['BACKUPS'] + '/' + tar + '.gz" ' + \
           os.environ['BUCKET'], 'status')
 system_command('rm "'+ os.environ['BACKUPS'] + '/' + tar + '.gz"', 'status')

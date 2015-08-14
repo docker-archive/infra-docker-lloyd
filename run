@@ -24,7 +24,7 @@ if [ "$S3CMD_OPTS" = "" ]; then
   export S3CMD_OPTS=""
 fi
 if [ "$BACKUPS" = "" ]; then
-  export BACKUPS=""
+  export BACKUPS="/backups"
 else
   export BACKUPS=$BACKUPS
 fi
