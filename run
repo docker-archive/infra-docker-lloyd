@@ -1,31 +1,52 @@
-#!/bin/sh -e
+#!/bin/sh
 
+if [ "$DEBUG" = "" ]; then
+  DEBUG=1
+fi
+if [ "$DEBUG" == 0 ]; then
+  exec 1>/dev/null
+  #exec 2>/dev/null
+fi
 if [ "$TIMEOUT" = "" ]; then
-  TIMEOUT=86400
+  export TIMEOUT=86400
 fi
 BACKUPS=/backups
 if [ "$PREFIX" = "" ]; then
-  PREFIX="%Y-%m-%d_%H-%M-%S_"
+  export PREFIX="%Y-%m-%d_%H-%M-%S_"
 fi
 if [ "$SUFFIX" = "" ]; then
-  SUFFIX=""
+  export SUFFIX=""
+fi
+if [ "$OPTS" = "" ]; then
+  export OPTS=""
+fi
+if [ "$S3CMD_OPTS" = "" ]; then
+  export S3CMD_OPTS=""
+fi
+if [ "$BACKUPS" = "" ]; then
+  export BACKUPS=""
+else
+  export BACKUPS=$BACKUPS
+fi
+if [ "$EMAIL_FROM" = "" ]; then
+  export EMAIL_FROM=""
+fi
+if [ "$EMAIL_TO" = "" ]; then
+  export EMAIL_TO=""
 fi
 
-BUCKET=$1
-if [ -z "$BUCKET" ]
-then
+export BUCKET=$1
+if [ -z "$BUCKET" ]; then
   echo "$0 bucket container [container...]"
   echo "(If set, docker-backup output will be POSTed to \$PUSHGATEWAY)"
   exit 1
 fi
 shift
 
-if [ -z "$ACCESS_KEY" -o -z "$SECRET_KEY" ]
-then
+if [ -z "$ACCESS_KEY" -o -z "$SECRET_KEY" ]; then
   echo "Please set ACCESS_KEY and SECRET_KEY environment variables"
   exit 1
 fi
-
 
 [ -d "$BACKUPS" ] || mkdir "$BACKUPS"
 
@@ -38,24 +59,16 @@ backup() {
   echo "START: $1"
   while true
   do
-    sprefix=$(date +${PREFIX})
-    ssuffix=$(date +${SUFFIX})
-    tar=${sprefix}$1${ssuffix}.tar
-    echo "BACKUP: $1 - file $tar"
-    /docker-backup/docker-backup $OPTS -addr /docker.sock store "$BACKUPS/$tar" "$1" | push_metrics
-    gzip "$BACKUPS/$tar"
-
-    echo "UPLOAD: $1"
-    s3cmd --access_key="$ACCESS_KEY" --secret_key="$SECRET_KEY" \
-          -c /dev/null $S3CMD_OPTS put "$BACKUPS/$tar.gz" $BUCKET
-    rm "$BACKUPS/$tar.gz"
-
+    # python script with error handling
+    /docker-backup/docker_backup.py $1
+    
     date +"last_run{container=\"$1\"} %s" | push_metrics
-    echo "SLEEP: $1 - for $TIMEOUT seconds"
     # TIMEOUT = 0 -> execute just once and exit
     if [ "$TIMEOUT" = 0 ]; then
-       echo "END: $1 - one time backup only"
-       break
+      echo "END: $1 - one time backup only"
+      break
+    else
+      echo "SLEEP: $1 - for $TIMEOUT seconds"
     fi
     sleep $TIMEOUT
   done

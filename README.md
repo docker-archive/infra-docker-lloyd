@@ -20,7 +20,15 @@ Container uses environment variable, which can be overwritten:
 | Variable | Default value | Description |
 | -------- | ------------- | ----------- |
 | PREFIX | "%Y-%m-%d_%H-%M-%S_" | Tarball prefix |
-| SUFFIX | | Tarball suffix |
+| SUFFIX | '' | Tarball suffix |
+| DEBUG | 1 | Enable debug output (stdout) |
+| PUSHGATEWAY | '' | Status reporting by HTTP request |
+| OPTS | '' | Options for docker-backup command |
+| S3CMD_OPTS | '' | Options for s3cmd command |
+| ACCESS_KEY | '' | AWS S3 Access Key |
+| SECRET_KEY | '' | AWS S3 Secret Key |
+| EMAIL_FROM | '' | Sender of problem emails |
+| EMAIL_TO | '' | Reciepient of problem emails |
 | TIMEOUT | 86400 | Backup period - 86400 = 24hours, 0 - one time backup only |
 
 See [docker-backup](https://github.com/discordianfish/docker-backup) on
